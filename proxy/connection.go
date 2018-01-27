@@ -2,11 +2,13 @@ package proxy
 
 import (
 	"fmt"
-	"log"
 	"net"
 
 	"github.com/Fleurer/hardshard/mysql"
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("connection")
 
 type Connection struct {
 	conn     net.Conn
@@ -27,7 +29,7 @@ func (c *Connection) Run() {
 	for {
 		packet, err := c.packetio.ReadPacket()
 		if err != nil {
-			log.Print("connection.Run() readPacket error: %s", err.Error())
+			log.Warnf("connection.Run() readPacket error: %s", err.Error())
 			return
 		}
 

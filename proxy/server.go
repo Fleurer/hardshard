@@ -1,10 +1,13 @@
 package proxy
 
 import (
-	"log"
 	"net"
 	"runtime"
+
+	"github.com/op/go-logging"
 )
+
+var log = logging.MustGetLogger("server")
 
 type Server struct {
 	addr     string
@@ -33,10 +36,10 @@ func (s *Server) Run() {
 	for s.isRunning {
 		conn, err := s.listener.Accept()
 		if err != nil {
-			log.Fatal("accept error %s", err.Error())
+			log.Errorf("accept error %s", err.Error())
 			continue
 		}
-		log.Print("Accept ", conn.RemoteAddr())
+		log.Infof("Accept %s", conn.RemoteAddr())
 
 		go s.handleConn(conn)
 	}
@@ -57,7 +60,7 @@ func (s *Server) handleConn(conn net.Conn) {
 		if err := recover(); err != nil {
 			buf := make([]byte, 4096)
 			buf = buf[:runtime.Stack(buf, false)]
-			log.Print("handleConn panic %v: %v\n%s", conn.RemoteAddr().String(), err, buf)
+			log.Errorf("handleConn panic %v: %v\n%s", conn.RemoteAddr().String(), err, buf)
 		}
 
 		c.Close()
