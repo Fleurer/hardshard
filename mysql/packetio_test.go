@@ -1,7 +1,15 @@
 package mysql
 
-import "testing"
+import (
+	"bytes"
+	"testing"
 
-func TestHello(t *testing.T) {
-	t.Fatalf("233")
+	"github.com/Fleurer/hardshard/mysql"
+)
+
+func TestNewPacketIO(t *testing.T) {
+	r := bytes.NewBufferString("hello\n")
+	w := bytes.NewBufferString("")
+
+	mysql.NewPacketIO(r, w)
 }
