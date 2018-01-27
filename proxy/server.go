@@ -7,19 +7,24 @@ import (
 )
 
 type Server struct {
-	host     string
-	port     int
+	addr     string
 	listener net.Listener
 
 	isRunning bool
 }
 
-func NewServer(host string, port int) *Server {
+func NewServer(addr string) (*Server, error) {
 	s := &Server{}
-	s.host = host
-	s.port = port
+	s.addr = addr
+
+	var err error
+	s.listener, err = net.Listen("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+
 	s.isRunning = false
-	return s
+	return s, nil
 }
 
 func (s *Server) Run() {
@@ -31,6 +36,7 @@ func (s *Server) Run() {
 			log.Fatal("accept error %s", err.Error())
 			continue
 		}
+		log.Print("Accept %s", conn.RemoteAddr())
 
 		go s.handleConn(conn)
 	}

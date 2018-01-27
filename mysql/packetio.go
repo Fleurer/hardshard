@@ -29,7 +29,12 @@ func NewPacketIOByConn(conn net.Conn) *PacketIO {
 }
 
 func (p *PacketIO) ReadPacket() ([]byte, error) {
-	return []byte{}, nil
+	buf := make([]byte, 512)
+	n, _ := p.r.Read(buf)
+
+	print("%s", buf[:n])
+
+	return buf[:n], nil
 }
 
 func (p *PacketIO) WriteErrorPacket(err error) {

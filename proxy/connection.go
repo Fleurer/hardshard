@@ -57,6 +57,6 @@ func (c *Connection) Close() error {
 }
 
 func (c *Connection) handlePacket(packet []byte) error {
-	print("%s", packet)
+	print("!!!!!")
 	return nil
 }
