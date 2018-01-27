@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"net"
 )
@@ -32,7 +33,7 @@ func (p *PacketIO) ReadPacket() ([]byte, error) {
 	buf := make([]byte, 512)
 	n, _ := p.r.Read(buf)
 
-	print("%s", buf[:n])
+	fmt.Printf("%d %s", n, buf[:n])
 
 	return buf[:n], nil
 }

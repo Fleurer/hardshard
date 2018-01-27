@@ -36,7 +36,7 @@ func (s *Server) Run() {
 			log.Fatal("accept error %s", err.Error())
 			continue
 		}
-		log.Print("Accept %s", conn.RemoteAddr())
+		log.Print("Accept ", conn.RemoteAddr())
 
 		go s.handleConn(conn)
 	}
