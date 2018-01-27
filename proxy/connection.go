@@ -5,10 +5,8 @@ import (
 	"net"
 
 	"github.com/Fleurer/hardshard/mysql"
-	"github.com/op/go-logging"
+	"github.com/siddontang/go-log/log"
 )
-
-var log = logging.MustGetLogger("connection")
 
 type Connection struct {
 	conn     net.Conn
@@ -29,7 +27,7 @@ func (c *Connection) Run() {
 	for {
 		packet, err := c.packetio.ReadPacket()
 		if err != nil {
-			log.Warnf("connection.Run() readPacket error: %s", err.Error())
+			log.Warn("connection.Run() readPacket error: %s", err.Error())
 			return
 		}
 

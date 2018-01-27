@@ -4,10 +4,8 @@ import (
 	"net"
 	"runtime"
 
-	"github.com/op/go-logging"
+	"github.com/siddontang/go-log/log"
 )
-
-var log = logging.MustGetLogger("server")
 
 type Server struct {
 	addr     string
@@ -36,10 +34,10 @@ func (s *Server) Run() {
 	for s.isRunning {
 		conn, err := s.listener.Accept()
 		if err != nil {
-			log.Errorf("accept error %s", err.Error())
+			log.Error("accept error %s", err.Error())
 			continue
 		}
-		log.Infof("Accept %s", conn.RemoteAddr())
+		log.Info("Accept %s", conn.RemoteAddr())
 
 		go s.handleConn(conn)
 	}
@@ -60,7 +58,7 @@ func (s *Server) handleConn(conn net.Conn) {
 		if err := recover(); err != nil {
 			buf := make([]byte, 4096)
 			buf = buf[:runtime.Stack(buf, false)]
-			log.Errorf("handleConn panic %v: %v\n%s", conn.RemoteAddr().String(), err, buf)
+			log.Error("handleConn panic %v: %v\n%s", conn.RemoteAddr().String(), err, buf)
 		}
 
 		c.Close()

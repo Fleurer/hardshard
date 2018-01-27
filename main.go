@@ -2,10 +2,8 @@ package main
 
 import (
 	"github.com/Fleurer/hardshard/proxy"
-	"github.com/op/go-logging"
+	"github.com/siddontang/go-log/log"
 )
-
-var log = logging.MustGetLogger("main")
 
 func main() {
 	s, err := proxy.NewServer("0.0.0.0:4001")
