@@ -5,6 +5,10 @@ import (
 	"io"
 )
 
+const (
+	MAX_PACKET_LEN = 2**24 - 1
+)
+
 type PacketIO struct {
 	r *bufio.Reader
 	w io.Writer
