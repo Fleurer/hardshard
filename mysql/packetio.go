@@ -3,20 +3,34 @@ package mysql
 import (
 	"bufio"
 	"io"
+	"net"
 )
 
 const (
-	MAX_PACKET_LEN = 2**24 - 1
+	MAX_PACKET_LEN = 1<<24 - 1
 )
 
 type PacketIO struct {
-	r *bufio.Reader
+	r io.Reader
 	w io.Writer
 }
 
-func NewPacketIO(r io.Reader, w io.Writer) PacketIO {
-	p := PacketIO{}
-	p.r = bufio.NewReaderSize(r, 1024)
+func NewPacketIO(r io.Reader, w io.Writer) *PacketIO {
+	p := &PacketIO{}
+	p.r = r
 	p.w = w
 	return p
+}
+
+func NewPacketIOByConn(conn net.Conn) *PacketIO {
+	r := bufio.NewReaderSize(conn, 1024)
+	w := conn
+	return NewPacketIO(r, w)
+}
+
+func (p *PacketIO) ReadPacket() ([]byte, error) {
+	return []byte{}, nil
+}
+
+func (p *PacketIO) WriteErrorPacket(err error) {
 }

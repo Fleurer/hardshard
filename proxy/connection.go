@@ -1,33 +1,39 @@
 package proxy
 
-import "net"
+import (
+	"log"
+	"net"
+
+	"github.com/Fleurer/hardshard/mysql"
+)
 
 type Connection struct {
-	conn     *net.Conn
-	packetio *PacketIO
+	conn     net.Conn
+	packetio *mysql.PacketIO
 
 	isClosed bool
 }
 
-func NewConnection(conn *net.Conn) *Connection {
+func NewConnection(conn net.Conn) *Connection {
 	c := &Connection{}
 	c.conn = conn
+	c.packetio = mysql.NewPacketIOByConn(conn)
 	c.isClosed = false
-	return conn
+	return c
 }
 
 func (c *Connection) Run() {
 	for {
-		packet, err := c.packetio.readPacket()
+		packet, err := c.packetio.ReadPacket()
 		if err != nil {
-			log.Warn("connection.Run() readPacket error: %s", err.Error())
+			log.Print("connection.Run() readPacket error: %s", err.Error())
 			return
 		}
 
-		err := c.handlePacket(packet)
+		err = c.handlePacket(packet)
 		if err != nil {
-			log.Error("dispatch error %s", err.Error())
-			c.packetio.writeErrorPacket(err)
+			log.Fatal("dispatch error %s", err.Error())
+			c.packetio.WriteErrorPacket(err)
 		}
 
 		if c.isClosed {
@@ -47,5 +53,10 @@ func (c *Connection) Close() error {
 	}
 
 	c.isClosed = true
+	return nil
+}
+
+func (c *Connection) handlePacket(packet []byte) error {
+	print("%s", packet)
 	return nil
 }

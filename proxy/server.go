@@ -1,10 +1,9 @@
 package proxy
 
 import (
+	"log"
 	"net"
 	"runtime"
-
-	"github.com/Fleurer/hardshard/connection"
 )
 
 type Server struct {
@@ -23,20 +22,18 @@ func NewServer(host string, port int) *Server {
 	return s
 }
 
-func (s *Server) Run() error {
+func (s *Server) Run() {
 	s.isRunning = true
 
 	for s.isRunning {
 		conn, err := s.listener.Accept()
 		if err != nil {
-			log.Error("accept error %s", err.Error())
+			log.Fatal("accept error %s", err.Error())
 			continue
 		}
 
 		go s.handleConn(conn)
 	}
-
-	return s
 }
 
 func (s *Server) Close() {
@@ -47,18 +44,18 @@ func (s *Server) Close() {
 	}
 }
 
-func (s *Server) handleConn(conn *net.Conn) {
-	conn := connection.NewConnection(c)
+func (s *Server) handleConn(conn net.Conn) {
+	c := NewConnection(conn)
 
 	defer func() {
 		if err := recover(); err != nil {
 			buf := make([]byte, 4096)
 			buf = buf[:runtime.Stack(buf, false)]
-			log.Error("handleConn panic %v: %v\n%s", c.RemoteAddr().String(), err, buf)
+			log.Print("handleConn panic %v: %v\n%s", conn.RemoteAddr().String(), err, buf)
 		}
 
-		conn.Close()
+		c.Close()
 	}()
 
-	conn.Run()
+	c.Run()
 }
