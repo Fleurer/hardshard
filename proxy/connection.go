@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -32,7 +33,7 @@ func (c *Connection) Run() {
 
 		err = c.handlePacket(packet)
 		if err != nil {
-			log.Fatal("dispatch error %s", err.Error())
+			fmt.Errorf("handlePacket error: %s", err.Error())
 			c.packetio.WriteErrorPacket(err)
 		}
 
