@@ -17,18 +17,14 @@ const (
 type PacketIO struct {
 	r        io.Reader
 	w        io.Writer
-	sequence uint8
-}
-
-type Packet struct {
-	data []byte
+	Sequence uint8
 }
 
 func NewPacketIO(r io.Reader, w io.Writer) *PacketIO {
 	pio := &PacketIO{}
 	pio.r = r
 	pio.w = w
-	pio.sequence = 0
+	pio.Sequence = 0
 	return pio
 }
 
@@ -53,11 +49,11 @@ func (pio *PacketIO) ReadPacket() ([]byte, error) {
 	}
 
 	sequence := uint8(header[3])
-	if pio.sequence != sequence {
-		return nil, fmt.Errorf("invalid sequence %d != %d", sequence, pio.sequence)
+	if pio.Sequence != sequence {
+		return nil, fmt.Errorf("invalid sequence %d != %d", sequence, pio.Sequence)
 	}
 
-	pio.sequence++
+	pio.Sequence++
 
 	// TODO: reuse the buffer ?
 	payload := make([]byte, length)
@@ -80,8 +76,16 @@ func (pio *PacketIO) ReadPacket() ([]byte, error) {
 	}
 }
 
-func (pio *PacketIO) WriteErrorPacket(err error) {
+func (pio *PacketIO) WritePacket(payload []byte) error {
+	length := len(payload)
+	for length >= MAX_PACKET_PAYLOAD_LENGTH {
+		header := []byte{0, 0, 0, 0}
+		print(header)
+	}
+	return nil
 }
 
-func (pio *PacketIO) WritePacket(payload []byte) {
+func (pio *PacketIO) WriteErrorPacket(err error) error {
+	// TODO: factor out this
+	return nil
 }
