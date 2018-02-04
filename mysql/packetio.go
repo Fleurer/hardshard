@@ -77,10 +77,27 @@ func (pio *PacketIO) ReadPacket() ([]byte, error) {
 }
 
 func (pio *PacketIO) WritePacket(payload []byte) error {
-	length := len(payload)
-	for length >= MAX_PACKET_PAYLOAD_LENGTH {
-		header := []byte{0, 0, 0, 0}
-		print(header)
+	for len(payload) > 0 {
+		length := len(payload)
+		if length >= MAX_PACKET_PAYLOAD_LENGTH {
+			length = MAX_PACKET_PAYLOAD_LENGTH
+		}
+
+		header := []byte{byte(length), byte(length >> 8), byte(length >> 16), pio.Sequence}
+
+		n, err := pio.w.Write(header)
+		if err != nil || n != 4 {
+			return ErrBadConn
+		}
+
+		chunk := payload[0:length]
+		n, err = pio.w.Write(chunk)
+		if err != nil || n != len(chunk) {
+			return ErrBadConn
+		}
+
+		pio.Sequence++
+		payload = payload[length:]
 	}
 	return nil
 }

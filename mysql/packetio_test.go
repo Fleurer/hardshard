@@ -47,3 +47,13 @@ func TestPacketIOWithComQuery1(t *testing.T) {
 		t.Fatalf("payload not equal\npayload: %b\nexpected: %b", payload, expectedPayload)
 	}
 }
+
+func TestWritePacket1(t *testing.T) {
+	buf := bytes.NewBufferString("")
+	pio := NewPacketIO(buf, buf)
+	payload := []byte("\x03select \"012345678901234567890123456789012345\"")
+	err := pio.WritePacket(payload)
+	if err != nil {
+		t.Fatalf("err on WritePacket: %s", err)
+	}
+}
