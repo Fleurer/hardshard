@@ -20,12 +20,16 @@ type PacketIO struct {
 	sequence uint8
 }
 
+type Packet struct {
+	data []byte
+}
+
 func NewPacketIO(r io.Reader, w io.Writer) *PacketIO {
-	p := &PacketIO{}
-	p.r = r
-	p.w = w
-	p.sequence = 0
-	return p
+	pio := &PacketIO{}
+	pio.r = r
+	pio.w = w
+	pio.sequence = 0
+	return pio
 }
 
 func NewPacketIOByConn(conn net.Conn) *PacketIO {
@@ -34,11 +38,11 @@ func NewPacketIOByConn(conn net.Conn) *PacketIO {
 	return NewPacketIO(r, w)
 }
 
-func (p *PacketIO) ReadPacket() ([]byte, error) {
+func (pio *PacketIO) ReadPacket() ([]byte, error) {
 	// [length: byte[3]][sequence_id: byte[1]][playload: byte[length]]
 	header := []byte{0, 0, 0, 0}
 
-	_, err := io.ReadFull(p.r, header)
+	_, err := io.ReadFull(pio.r, header)
 	if err != nil {
 		return nil, ErrBadConn
 	}
@@ -49,15 +53,15 @@ func (p *PacketIO) ReadPacket() ([]byte, error) {
 	}
 
 	sequence := uint8(header[3])
-	if p.sequence != sequence {
-		return nil, fmt.Errorf("invalid sequence %d != %d", sequence, p.sequence)
+	if pio.sequence != sequence {
+		return nil, fmt.Errorf("invalid sequence %d != %d", sequence, pio.sequence)
 	}
 
-	p.sequence++
+	pio.sequence++
 
 	// TODO: reuse the buffer ?
 	payload := make([]byte, length)
-	_, err = io.ReadFull(p.r, payload)
+	_, err = io.ReadFull(pio.r, payload)
 	if err != nil {
 		return nil, ErrBadConn
 	}
@@ -68,7 +72,7 @@ func (p *PacketIO) ReadPacket() ([]byte, error) {
 		// If the payload is larger than or equal to 2**24-1 bytes the length is set to 2**24-1
 		// (0xffffff) and a additional packets are sent with the rest of the payload until
 		// the payload of a packet is less than 2**24-1 bytes.
-		nextPayload, err := p.ReadPacket()
+		nextPayload, err := pio.ReadPacket()
 		if err != nil {
 			return nil, err
 		}
@@ -76,5 +80,8 @@ func (p *PacketIO) ReadPacket() ([]byte, error) {
 	}
 }
 
-func (p *PacketIO) WriteErrorPacket(err error) {
+func (pio *PacketIO) WriteErrorPacket(err error) {
+}
+
+func (pio *PacketIO) WritePacket(payload []byte) {
 }
