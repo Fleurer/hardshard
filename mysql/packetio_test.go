@@ -78,8 +78,17 @@ func TestWritePacket2(t *testing.T) {
 	if buf.Len() != MAX_PACKET_PAYLOAD_LENGTH*2+1+12 {
 		t.Fatalf("mismatch len(buf): %v", buf.Len())
 	}
-	if !bytes.Equal(buf.Bytes()[0:4], []byte{255, 255, 255, 0}) {
-		t.Fatalf("invalid header: %v", buf.Bytes()[0:4])
+	bbuf := buf.Bytes()[0:4]
+	if !bytes.Equal(bbuf, []byte{255, 255, 255, 0}) {
+		t.Fatalf("invalid header: %v", bbuf)
+	}
+	bbuf = buf.Bytes()[MAX_PACKET_PAYLOAD_LENGTH+4 : MAX_PACKET_PAYLOAD_LENGTH+8]
+	if !bytes.Equal(bbuf, []byte{255, 255, 255, 1}) {
+		t.Fatalf("invalid header: %v", bbuf)
+	}
+	bbuf = buf.Bytes()[MAX_PACKET_PAYLOAD_LENGTH*2+8 : MAX_PACKET_PAYLOAD_LENGTH*2+12]
+	if !bytes.Equal(bbuf, []byte{1, 0, 0, 2}) {
+		t.Fatalf("invalid header: %v", bbuf)
 	}
 }
 
