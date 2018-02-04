@@ -2,7 +2,7 @@ package mysql
 
 import "errors"
 
-const (
+var (
 	ErrBadConn       = errors.New("connection was bad")
 	ErrMalformPacket = errors.New("Malform packet error")
 )
