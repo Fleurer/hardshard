@@ -1,6 +1,7 @@
 package mysql
 
 // https://dev.mysql.com/doc/internals/en/mysql-packet.html
+// https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_packets.html
 
 import (
 	"bufio"
@@ -10,8 +11,7 @@ import (
 )
 
 const (
-	MAX_PACKET_LENGTH = 1<<24 - 1
-	// MAX_PACKET_PAYLOAD_LENGTH = MAX_PACKET_LENGTH - 4
+	MAX_PACKET_PAYLOAD_LENGTH = 1<<24 - 1
 )
 
 type PacketIO struct {
@@ -62,8 +62,7 @@ func (p *PacketIO) ReadPacket() ([]byte, error) {
 		return nil, ErrBadConn
 	}
 
-	// TODO: 确认这里应该使用 MAX_PACKET_PAYLOAD_LENGTH 还是 MAX_PACKET_LENGTH
-	if length < MAX_PACKET_LENGTH {
+	if length < MAX_PACKET_PAYLOAD_LENGTH {
 		return payload, nil
 	} else {
 		nextPayload, err := p.ReadPacket()
