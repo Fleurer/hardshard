@@ -56,4 +56,10 @@ func TestWritePacket1(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err on WritePacket: %s", err)
 	}
+	if !bytes.Equal(buf.Bytes()[0:4], []byte{46, 0, 0, 0}) {
+		t.Fatalf("invalid header: %v", buf.Bytes()[0:4])
+	}
+	if !bytes.Equal(buf.Bytes()[4:], payload) {
+		t.Fatalf("invalid payload", buf.Bytes()[4:])
+	}
 }
