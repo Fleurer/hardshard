@@ -65,6 +65,9 @@ func (p *PacketIO) ReadPacket() ([]byte, error) {
 	if length < MAX_PACKET_PAYLOAD_LENGTH {
 		return payload, nil
 	} else {
+		// If the payload is larger than or equal to 2**24-1 bytes the length is set to 2**24-1
+		// (0xffffff) and a additional packets are sent with the rest of the payload until
+		// the payload of a packet is less than 2**24-1 bytes.
 		nextPayload, err := p.ReadPacket()
 		if err != nil {
 			return nil, err
