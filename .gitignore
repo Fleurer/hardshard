@@ -1,2 +1,12 @@
+# Binaries for programs and plugins
 hardshard
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+
+# Output of the go tools
+*.out
+.glide/
 vendor/
