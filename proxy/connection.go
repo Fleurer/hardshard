@@ -58,5 +58,21 @@ func (c *Connection) Close() error {
 }
 
 func (c *Connection) handlePacket(payload []byte) error {
-	return nil
+	cmd = payload[0]
+	body = payload[1:]
+
+	switch cmd {
+	case mysql.COM_QUIT:
+	case mysql.COM_QUERY:
+	case mysql.COM_INIT_DB:
+	case mysql.COM_FIELD_LIST:
+	case mysql.COM_STMT_PREPARE:
+	case mysql.COM_STMT_EXECUTE:
+	case mysql.COM_STMT_CLOSE:
+	case mysql.COM_STMT_SEND_LONG_DATA:
+	case mysql.COM_STMT_RESET:
+	case mysql.COM_SET_OPTION:
+	default:
+		return mysql.NewError()
+	}
 }
