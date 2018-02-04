@@ -1,7 +1,9 @@
 package mysql
 
-// https://dev.mysql.com/doc/internals/en/mysql-packet.html
-// https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_packets.html
+// Protocol Basics: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_packets.html
+// OK_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_ok_packet.html
+// ERR_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_err_packet.html
+// EOF_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_eof_packet.html
 
 import (
 	"bufio"
@@ -99,10 +101,5 @@ func (pio *PacketIO) WritePacket(payload []byte) error {
 		pio.Sequence++
 		payload = payload[length:]
 	}
-	return nil
-}
-
-func (pio *PacketIO) WriteErrorPacket(err error) error {
-	// TODO: factor out this
 	return nil
 }
