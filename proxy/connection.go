@@ -25,13 +25,13 @@ func NewConnection(conn net.Conn) *Connection {
 
 func (c *Connection) Run() {
 	for {
-		packet, err := c.packetio.ReadPacket()
+		payload, err := c.packetio.ReadPacket()
 		if err != nil {
 			log.Warn("connection.Run() readPacket error: %s", err.Error())
 			return
 		}
 
-		err = c.handlePacket(packet)
+		err = c.handlePacket(payload)
 		if err != nil {
 			fmt.Errorf("handlePacket error: %s", err.Error())
 			c.packetio.WriteErrorPacket(err)
@@ -57,6 +57,6 @@ func (c *Connection) Close() error {
 	return nil
 }
 
-func (c *Connection) handlePacket(packet []byte) error {
+func (c *Connection) handlePacket(payload []byte) error {
 	return nil
 }
