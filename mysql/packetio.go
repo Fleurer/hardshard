@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	MAX_PACKET_PAYLOAD_LENGTH = 1<<24 - 1
+	MAX_PACKET_PAYLOAD_LENGTH = 1<<24 - 1 // 16mb
 )
 
 type PacketIO struct {

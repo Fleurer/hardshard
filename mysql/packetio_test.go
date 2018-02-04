@@ -63,3 +63,22 @@ func TestWritePacket1(t *testing.T) {
 		t.Fatalf("invalid payload", buf.Bytes()[4:])
 	}
 }
+
+func TestWritePacket2(t *testing.T) {
+	buf := bytes.NewBufferString("")
+	pio := NewPacketIO(buf, buf)
+	payload := make([]byte, MAX_PACKET_PAYLOAD_LENGTH*2+1)
+	for i, _ := range payload {
+		payload[i] = '6'
+	}
+	err := pio.WritePacket(payload)
+	if err != nil {
+		t.Fatalf("err on WritePacket: %s", err)
+	}
+	if buf.Len() != MAX_PACKET_PAYLOAD_LENGTH*2+1+12 {
+		t.Fatalf("mismatch len(buf): %v", buf.Len())
+	}
+	if !bytes.Equal(buf.Bytes()[0:4], []byte{255, 255, 255, 0}) {
+		t.Fatalf("invalid header: %v", buf.Bytes()[0:4])
+	}
+}
