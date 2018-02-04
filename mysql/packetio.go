@@ -48,8 +48,6 @@ func (p *PacketIO) ReadPacket() ([]byte, error) {
 		return nil, fmt.Errorf("invalid payload length %d", length)
 	}
 
-	fmt.Printf("payload length: %d", length)
-
 	sequence := uint8(header[3])
 	if p.sequence != sequence {
 		return nil, fmt.Errorf("invalid sequence %d != %d", sequence, p.sequence)
