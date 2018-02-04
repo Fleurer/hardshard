@@ -8,18 +8,20 @@ import (
 )
 
 const (
-	MAX_PACKET_LEN = 1<<24 - 1
+	MAX_PACKET_LEN = 0xFFFFFF // 16MB
 )
 
 type PacketIO struct {
-	r io.Reader
-	w io.Writer
+	r        io.Reader
+	w        io.Writer
+	sequence int64
 }
 
 func NewPacketIO(r io.Reader, w io.Writer) *PacketIO {
 	p := &PacketIO{}
 	p.r = r
 	p.w = w
+	p.sequence = 0
 	return p
 }
 
