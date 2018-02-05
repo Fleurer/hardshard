@@ -34,7 +34,7 @@ func (c *Connection) Run() {
 		err = c.handlePacket(payload)
 		if err != nil {
 			fmt.Errorf("handlePacket error: %s", err.Error())
-			c.packetio.WriteErrorPacket(err)
+			// c.packetio.WriteErrorPacket(err)
 		}
 
 		if c.isClosed {
@@ -59,7 +59,7 @@ func (c *Connection) Close() error {
 
 func (c *Connection) handlePacket(payload []byte) error {
 	cmd := payload[0]
-	body := payload[1:]
+	// body := payload[1:]
 
 	switch cmd {
 	case mysql.COM_QUIT:
@@ -73,6 +73,7 @@ func (c *Connection) handlePacket(payload []byte) error {
 	case mysql.COM_STMT_RESET:
 	case mysql.COM_SET_OPTION:
 	default:
-		return mysql.NewError()
+		// return mysql.NewError()
 	}
+	return nil
 }
