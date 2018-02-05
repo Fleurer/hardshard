@@ -44,20 +44,19 @@ func (pio *PacketIO) ReadPacket() ([]byte, error) {
 	if err != nil {
 		return nil, ErrBadConn
 	}
+	pio.Sequence++
 
 	length := uint32(header[0]) + uint32(header[1])<<8 + uint32(header[2])<<16
-
-	// TODO: packet 大小恰好为 16MB 的话，后面是否会跟一个长度为 0 的 packet?
-	// if length < 1 {
-	//	return nil, fmt.Errorf("invalid payload length %d", length)
-	// }
 
 	sequence := uint8(header[3])
 	if pio.Sequence != sequence {
 		return nil, fmt.Errorf("invalid sequence %d != %d", sequence, pio.Sequence)
 	}
 
-	pio.Sequence++
+	// 恰好 16Mb 的 packet 后面会追加一个长度为 0 的 packet
+	if length == 0 {
+		return []byte{}, nil
+	}
 
 	// TODO: reuse the buffer ?
 	payload := make([]byte, length)
