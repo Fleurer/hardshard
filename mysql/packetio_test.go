@@ -110,3 +110,24 @@ func TestWritePacket3(t *testing.T) {
 		t.Fatalf("invalid header: %v", buf.Bytes()[0:4])
 	}
 }
+
+func TestWritePacket4(t *testing.T) {
+	buf := bytes.NewBufferString("")
+	pio := NewPacketIO(buf, buf)
+	payload := make([]byte, MAX_PACKET_PAYLOAD_LENGTH)
+	err := pio.WritePacket(payload)
+	if err != nil {
+		t.Fatalf("err on WritePacket: %s", err)
+	}
+	if buf.Len() != MAX_PACKET_PAYLOAD_LENGTH+4+4 {
+		t.Fatalf("mismatch len(buf): %v", buf.Len())
+	}
+	bbuf := buf.Bytes()[0:4]
+	if !bytes.Equal(bbuf, []byte{255, 255, 255, 0}) {
+		t.Fatalf("invalid header: %v", bbuf)
+	}
+	bbuf = buf.Bytes()[buf.Len()-4:]
+	if !bytes.Equal(bbuf, []byte{0, 0, 0, 1}) {
+		t.Fatalf("invalid header: %v", bbuf)
+	}
+}
