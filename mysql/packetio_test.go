@@ -103,7 +103,7 @@ func TestWritePacket3(t *testing.T) {
 	if err != nil {
 		t.Fatalf("err on WritePacket: %s", err)
 	}
-	if buf.Len() != MAX_PACKET_PAYLOAD_LENGTH*2+8 {
+	if buf.Len() != MAX_PACKET_PAYLOAD_LENGTH*2+8+4 {
 		t.Fatalf("mismatch len(buf): %v", buf.Len())
 	}
 	if !bytes.Equal(buf.Bytes()[0:4], []byte{255, 255, 255, 0}) {

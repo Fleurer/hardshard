@@ -83,7 +83,6 @@ func (pio *PacketIO) ReadPacket() ([]byte, error) {
 }
 
 func (pio *PacketIO) WritePacket(payload []byte) error {
-	// TODO: 如果 payload 恰好等于 16MB，怎样处理?
 	for len(payload) > 0 {
 		length := len(payload)
 		if length >= MAX_PACKET_PAYLOAD_LENGTH {
@@ -91,19 +90,29 @@ func (pio *PacketIO) WritePacket(payload []byte) error {
 		}
 
 		header := []byte{byte(length), byte(length >> 8), byte(length >> 16), pio.Sequence}
-
 		n, err := pio.w.Write(header)
 		if err != nil || n != 4 {
 			return ErrBadConn
 		}
-
 		chunk := payload[0:length]
 		n, err = pio.w.Write(chunk)
 		if err != nil || n != len(chunk) {
 			return ErrBadConn
 		}
-
 		pio.Sequence++
+
+		// 如果 payload 恰好等于 16MB，后面追加一个长度为 0 的 packet
+		// https://github.com/Qihoo360/Atlas/blob/128b0544cefc800366f70e534c5130f35574721c/src/network-mysqld.c#L364
+		if len(payload) == MAX_PACKET_PAYLOAD_LENGTH {
+			header := []byte{0, 0, 0, pio.Sequence}
+			n, err := pio.w.Write(header)
+			if err != nil || n != 4 {
+				return ErrBadConn
+			}
+			pio.Sequence++
+			return nil
+		}
+
 		payload = payload[length:]
 	}
 	return nil
