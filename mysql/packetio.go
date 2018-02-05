@@ -46,9 +46,11 @@ func (pio *PacketIO) ReadPacket() ([]byte, error) {
 	}
 
 	length := uint32(header[0]) + uint32(header[1])<<8 + uint32(header[2])<<16
-	if length < 1 {
-		return nil, fmt.Errorf("invalid payload length %d", length)
-	}
+
+	// TODO: packet 大小恰好为 16MB 的话，后面是否会跟一个长度为 0 的 packet?
+	// if length < 1 {
+	//	return nil, fmt.Errorf("invalid payload length %d", length)
+	// }
 
 	sequence := uint8(header[3])
 	if pio.Sequence != sequence {
@@ -67,6 +69,7 @@ func (pio *PacketIO) ReadPacket() ([]byte, error) {
 	if length < MAX_PACKET_PAYLOAD_LENGTH {
 		return payload, nil
 	} else {
+		// https://dev.mysql.com/doc/internals/en/sending-more-than-16mbyte.html
 		// If the payload is larger than or equal to 2**24-1 bytes the length is set to 2**24-1
 		// (0xffffff) and a additional packets are sent with the rest of the payload until
 		// the payload of a packet is less than 2**24-1 bytes.
@@ -79,6 +82,7 @@ func (pio *PacketIO) ReadPacket() ([]byte, error) {
 }
 
 func (pio *PacketIO) WritePacket(payload []byte) error {
+	// TODO: 如果 payload 恰好等于 16MB，怎样处理?
 	for len(payload) > 0 {
 		length := len(payload)
 		if length >= MAX_PACKET_PAYLOAD_LENGTH {

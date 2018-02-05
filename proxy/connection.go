@@ -58,8 +58,8 @@ func (c *Connection) Close() error {
 }
 
 func (c *Connection) handlePacket(payload []byte) error {
-	cmd = payload[0]
-	body = payload[1:]
+	cmd := payload[0]
+	body := payload[1:]
 
 	switch cmd {
 	case mysql.COM_QUIT:
