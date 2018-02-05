@@ -77,6 +77,7 @@ func (pio *PacketIO) ReadPacket() ([]byte, error) {
 		if err != nil {
 			return nil, err
 		}
+		// TODO: 这里性能不好，埋指标计数 slow path
 		return append(payload, nextPayload...), nil
 	}
 }
