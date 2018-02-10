@@ -31,7 +31,6 @@ func (c *PacketCoder) encodeEOF() {
 
 func (c *PacketCoder) encodeError(e error) []byte {
 	// ERR_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_err_packet.html
-	// It contains a SQL state value if CLIENT_PROTOCOL_41 is enabled.
 	var m *MySqlError
 	var ok bool
 
@@ -45,6 +44,7 @@ func (c *PacketCoder) encodeError(e error) []byte {
 	payload = append(payload, byte(m.Code), byte(m.Code>>8))
 
 	if c.capabilities&CLIENT_PROTOCOL_41 > 0 {
+		// It contains a SQL state value if CLIENT_PROTOCOL_41 is enabled.
 		payload = append(payload, '#')
 		payload = append(payload, m.State...)
 	}
