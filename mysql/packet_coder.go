@@ -1,7 +1,6 @@
 package mysql
 
 // Protocol Basics: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_packets.html
-// ERR_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_err_packet.html
 // EOF_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_eof_packet.html
 
 type PacketCoder struct {
@@ -25,4 +24,30 @@ func (c *PacketCoder) encodeOK(status uint, affectedRows uint64, insertId uint64
 		payload = append(payload, 0, 0)                          // number of warnings
 	}
 	return payload
+}
+
+func (c *PacketCoder) encodeEOF() {
+}
+
+func (c *PacketCoder) encodeError(e error) {
+	// ERR_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_err_packet.html
+	// It contains a SQL state value if CLIENT_PROTOCOL_41 is enabled.
+	var m *MySqlError
+	var ok bool
+
+	m, ok = e.(*MySqlError)
+	if !ok {
+		m = NewMySqlError(ER_UNKNOWN_ERROR, e.Error())
+	}
+
+	payload := make([]byte, 0, 16+len(m.Message))
+	payload = append(payload, ERR_HEADER)
+	payload = append(payload, byte(m.Code), byte(m.Code>>8))
+
+	if c.capability&CLIENT_PROTOCOL_41 > 0 {
+		payload = append(payload, '#')
+		payload = append(payload, m.State...)
+	}
+
+	data = append(payload, m.Message...)
 }
