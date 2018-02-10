@@ -1,7 +1,5 @@
 package mysql
 
-// Protocol Basics: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_packets.html
-
 type PacketCoder struct {
 	capabilities uint32
 }
@@ -30,8 +28,8 @@ func (c *PacketCoder) encodeEOF(warnings uint16, statusFlags uint16) []byte {
 	payload := make([]byte, 0, 5)
 	payload = append(payload, EOF_HEADER)
 	if c.capabilities&CLIENT_PROTOCOL_41 > 0 {
-		payload = append(payload, byte(warnings), byte(warnings)>>8)       // number of warnings
-		payload = append(payload, byte(statusFlags), byte(statusFlags)>>8) // SERVER_STATUS_flags_enum
+		payload = append(payload, byte(warnings), byte(warnings>>8))       // number of warnings
+		payload = append(payload, byte(statusFlags), byte(statusFlags>>8)) // SERVER_STATUS_flags_enum
 	}
 	return payload
 }
