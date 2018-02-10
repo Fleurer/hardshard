@@ -52,7 +52,7 @@ func (s *Server) Close() {
 }
 
 func (s *Server) handleConn(conn net.Conn) {
-	c := NewConnection(conn)
+	myconn := NewConnection(conn)
 
 	defer func() {
 		if err := recover(); err != nil {
@@ -61,8 +61,8 @@ func (s *Server) handleConn(conn net.Conn) {
 			log.Error("handleConn panic %v: %v\n%s", conn.RemoteAddr().String(), err, buf)
 		}
 
-		c.Close()
+		myconn.Close()
 	}()
 
-	c.Run()
+	myconn.Run()
 }

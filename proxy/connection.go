@@ -3,6 +3,7 @@ package proxy
 import (
 	"fmt"
 	"net"
+	"os"
 
 	"github.com/Fleurer/hardshard/mysql"
 	"github.com/siddontang/go-log/log"
@@ -24,6 +25,20 @@ func NewConnection(conn net.Conn) *Connection {
 }
 
 func (c *Connection) Run() {
+	if err := c.handshake(); err != nil {
+		c.writeError(err)
+		c.Close()
+		return
+	}
+
+	c.loop()
+}
+
+func (c *Connection) handshake() error {
+	return nil
+}
+
+func (c *Connection) loop() {
 	for {
 		payload, err := c.packetio.ReadPacket()
 		if err != nil {
@@ -31,9 +46,9 @@ func (c *Connection) Run() {
 			return
 		}
 
-		err = c.handlePacket(payload)
+		err = c.handleRequestPacket(payload)
 		if err != nil {
-			fmt.Errorf("handlePacket error: %s", err.Error())
+			fmt.Errorf("handleRequestPacket error: %s", err.Error())
 			// c.packetio.WriteErrorPacket(err)
 		}
 
@@ -57,9 +72,11 @@ func (c *Connection) Close() error {
 	return nil
 }
 
-func (c *Connection) handlePacket(payload []byte) error {
+func (c *Connection) handleRequestPacket(payload []byte) error {
 	cmd := payload[0]
-	// body := payload[1:]
+	body := payload[1:]
+	fmt.Printf("cmd: %v body: %v", cmd, body)
+	os.Exit(1)
 
 	switch cmd {
 	case mysql.COM_QUIT:
@@ -75,5 +92,9 @@ func (c *Connection) handlePacket(payload []byte) error {
 	default:
 		// return mysql.NewError()
 	}
+	return nil
+}
+
+func (c *Connection) writeError(error) error {
 	return nil
 }
