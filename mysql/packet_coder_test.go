@@ -37,6 +37,10 @@ func TestEncodeError(t *testing.T) {
 	if !bytes.Equal(payload, expectedPayload) {
 		t.Fatalf("bad result %v, expected: %v", payload, expectedPayload)
 	}
+
+	if len(payload) != len(m.Message)+9 {
+		t.Fatalf("bad result %v, expected: %v", len(payload), len(m.Message))
+	}
 }
 
 func TestEncodeError2(t *testing.T) {
