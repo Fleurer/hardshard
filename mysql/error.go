@@ -20,7 +20,7 @@ func (e *MySqlError) Error() string {
 	return fmt.Sprintf("MYSQL ERROR %d (%s): %s", e.Code, e.State, e.Message)
 }
 
-func NewError(code uint16, message string) MySqlError {
+func NewMySqlError(code uint16, message string) *MySqlError {
 	e := MySqlError{}
 	e.Code = code
 	e.Message = message
@@ -29,5 +29,5 @@ func NewError(code uint16, message string) MySqlError {
 	} else {
 		e.State = DEFAULT_MYSQL_STATE
 	}
-	return e
+	return &e
 }
