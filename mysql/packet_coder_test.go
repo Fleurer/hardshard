@@ -23,6 +23,7 @@ func TestEncodeOK(t *testing.T) {
 }
 
 func TestEncodeError(t *testing.T) {
+	// test example from https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_err_packet.html
 	c := setupPacketCoder()
 	m := NewMySqlError(ER_NO_TABLES_USED, "No tables used")
 	payload := c.encodeError(m)
