@@ -55,3 +55,16 @@ func TestEncodeError2(t *testing.T) {
 		t.Fatalf("bad result %v, expected: %v", payload, expectedPayload)
 	}
 }
+
+func TestEncodeEOF(t *testing.T) {
+	// test example from https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_eof_packet.html
+	c := setupPacketCoder()
+	payload := c.encodeEOF(0, 2)
+	expectedPayload := []byte{
+		254, 0, 0, 2, 0,
+	}
+
+	if !bytes.Equal(payload, expectedPayload) {
+		t.Fatalf("bad result %v, expected: %v", payload, expectedPayload)
+	}
+}
