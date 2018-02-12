@@ -4,7 +4,7 @@ type PacketCoder struct {
 	capabilities uint32
 }
 
-func (c *PacketCoder) encodeOK(status uint16, affectedRows uint64, insertId uint64) []byte {
+func (c *PacketCoder) EncodeOK(status uint16, affectedRows uint64, insertId uint64) []byte {
 	// OK_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_ok_packet.html
 	// As of MySQL 5.7.5, OK packes are also used to indicate EOF, and EOF packets are deprecated.
 	// These rules distinguish whether the packet represents OK or EOF:
@@ -23,7 +23,7 @@ func (c *PacketCoder) encodeOK(status uint16, affectedRows uint64, insertId uint
 	return payload
 }
 
-func (c *PacketCoder) encodeEOF(warnings uint16, statusFlags uint16) []byte {
+func (c *PacketCoder) EncodeEOF(warnings uint16, statusFlags uint16) []byte {
 	// EOF_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_eof_packet.html
 	payload := make([]byte, 0, 5)
 	payload = append(payload, EOF_HEADER)
@@ -34,7 +34,7 @@ func (c *PacketCoder) encodeEOF(warnings uint16, statusFlags uint16) []byte {
 	return payload
 }
 
-func (c *PacketCoder) encodeError(e error) []byte {
+func (c *PacketCoder) EncodeError(e error) []byte {
 	// ERR_PACKET: https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_err_packet.html
 	// https://dev.mysql.com/doc/dev/mysql-server/8.0.0/page_protocol_basic_dt_strings.html
 	var m *MySqlError

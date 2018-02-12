@@ -59,7 +59,7 @@ func PutLengthEncodedInt(n uint64) []byte {
 
 func GetLengthEnodedString(b []byte) ([]byte, bool, int, error) {
 	// Get length
-	num, isNull, n := FromLengthEncodedInt(b)
+	num, isNull, n := GetLengthEncodedInt(b)
 	if num < 1 {
 		return nil, isNull, n, nil
 	}
