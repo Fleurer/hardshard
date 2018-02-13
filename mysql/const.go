@@ -1,6 +1,10 @@
 package mysql
 
 const (
+	SERVER_VERSION string = "5.5.31-mixer-0.1"
+)
+
+const (
 	OK_HEADER          byte = 0x00
 	ERR_HEADER         byte = 0xff
 	EOF_HEADER         byte = 0xfe
