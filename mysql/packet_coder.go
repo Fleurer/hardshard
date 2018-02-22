@@ -1,7 +1,19 @@
 package mysql
 
+import "encoding/binary"
+
 type PacketCoder struct {
 	capabilities uint32
+}
+
+type HandshakeResponse struct {
+	capabilityFlags uint32
+	maxPacketSize   uint32
+	charsetId       uint8
+	userName        string
+	authResponse    string
+	databaseName    string
+	connectAttrs    map[string]string
 }
 
 func (c *PacketCoder) EncodeOK(status uint16, affectedRows uint64, insertId uint64) []byte {
@@ -104,6 +116,12 @@ func (c *PacketCoder) EncodeInitialHandshake(capabilityFlags uint32, statusFlags
 	return payload
 }
 
-func (c *PacketCoder) DecodeHandshakeResponse(payload []byte) error {
+func (c *PacketCoder) DecodeHandshakeResponse(payload []byte) (*HandshakeResponse, error) {
+	// https://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse
+	pos := 0
+	capabilityFlags := binary.LittleEndian.Uint32(payload[pos : pos+4])
+	pos += 4
+	maxPacketSize := binary.LittleEndian.Uint32(payload[4:8])
+	charsetId := uint8(payload[8])
 	return nil
 }
