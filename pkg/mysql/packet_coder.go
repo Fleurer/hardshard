@@ -114,8 +114,8 @@ func (c *PacketCoder) EncodeInitialHandshake(capabilityFlags uint32, statusFlags
 	return payload
 }
 
-func (c *PacketCoder) DecodeHandshakeResponse(payload []byte) (*HandshakeResponse, error) {
+func (c *PacketCoder) DecodeHandshakeResponse(payload []byte, resp *HandshakeResponse) (int, error) {
 	// https://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse
 	// return nil
-	return nil, nil
+	return 0, nil
 }
