@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Fleurer/hardshard/proxy"
+	"github.com/Fleurer/hardshard/pkg/proxy"
 	"github.com/siddontang/go-log/log"
 )
 

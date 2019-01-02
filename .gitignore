@@ -1,5 +1,4 @@
 # Binaries for programs and plugins
-hardshard
 *.exe
 *.dll
 *.so
@@ -10,3 +9,4 @@ hardshard
 *.out
 .glide/
 vendor/
+bin/*
