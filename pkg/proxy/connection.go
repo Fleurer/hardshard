@@ -5,7 +5,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/Fleurer/hardshard/mysql"
+	"github.com/Fleurer/hardshard/pkg/mysql"
 	"github.com/siddontang/go-log/log"
 )
 
