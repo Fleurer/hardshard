@@ -4,14 +4,26 @@ type PacketCoder struct {
 	capabilities uint32
 }
 
+type InitialHandshake struct {
+	CapabilityFlags uint32
+	StatusFlags     uint16
+	ConnectionId    uint32
+	CollationId     uint8
+	AuthPluginData  []byte
+}
+
 type HandshakeResponse struct {
-	capabilityFlags uint32
-	maxPacketSize   uint32
-	charsetId       uint8
-	userName        string
-	authResponse    string
-	databaseName    string
-	connectAttrs    map[string]string
+	CapabilityFlags uint32
+	MaxPacketSize   uint32
+	CharsetId       uint8
+	UserName        string
+	AuthResponse    string
+	DatabaseName    string
+	ConnectAttrs    map[string]string
+}
+
+func NewPacketCoder() *PacketCoder {
+	return &PacketCoder{capabilities: 0}
 }
 
 func (c *PacketCoder) EncodeOK(status uint16, affectedRows uint64, insertId uint64) []byte {
@@ -69,7 +81,7 @@ func (c *PacketCoder) EncodeError(e error) []byte {
 	return payload
 }
 
-func (c *PacketCoder) EncodeInitialHandshake(capabilityFlags uint32, statusFlags uint16, connectionId uint32, collationId uint8, authPluginData []byte) []byte {
+func (c *PacketCoder) EncodeInitialHandshake(h InitialHandshake) []byte {
 	// https://dev.mysql.com/doc/internals/en/connection-phase-packets.html
 	payload := make([]byte, 0, 128)
 	// protocol version: 10
@@ -77,22 +89,22 @@ func (c *PacketCoder) EncodeInitialHandshake(capabilityFlags uint32, statusFlags
 	// string[NULL], server version
 	payload = append(payload, SERVER_VERSION...)
 	// int32, connection id
-	payload = append(payload, Uint32ToBytes(connectionId)...)
+	payload = append(payload, Uint32ToBytes(h.ConnectionId)...)
 	// string[8], auth-plugin-data, part-1
-	payload = append(payload, authPluginData[0:8]...)
+	payload = append(payload, h.AuthPluginData[0:8]...)
 	// 1 byte, [00] filter
 	payload = append(payload, 0)
 	// 2 bytes, capabilities lower 2 bytes
-	payload = append(payload, byte(capabilityFlags), byte(capabilityFlags>>8))
+	payload = append(payload, byte(h.CapabilityFlags), byte(h.CapabilityFlags>>8))
 	// 1 byte, charset, default utf-8
-	payload = append(payload, byte(collationId))
+	payload = append(payload, byte(h.CollationId))
 	// 2 bytes, statusFlags
-	payload = append(payload, Uint16ToBytes(statusFlags)...)
+	payload = append(payload, Uint16ToBytes(h.StatusFlags)...)
 	// 2 bytes, capability_flags_2, upper 2 bytes of the capabilityFlags
-	payload = append(payload, byte(capabilityFlags>>16), byte(capabilityFlags>>24))
+	payload = append(payload, byte(h.CapabilityFlags>>16), byte(h.CapabilityFlags>>24))
 	// 1 byte, length of auth-plugin-data or 0
-	if capabilityFlags&CLIENT_PLUGIN_AUTH > 0 {
-		payload = append(payload, byte(len(authPluginData)))
+	if h.CapabilityFlags&CLIENT_PLUGIN_AUTH > 0 {
+		payload = append(payload, byte(len(h.AuthPluginData)))
 	} else {
 		panic("please CLIENT_PLUGIN_AUTH")
 	}
@@ -100,12 +112,12 @@ func (c *PacketCoder) EncodeInitialHandshake(capabilityFlags uint32, statusFlags
 	payload = append(payload, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 	// string[$len]   auth-plugin-data-part-2
 	// $len=MAX(13, length of auth-plugin-data - 8)
-	if capabilityFlags&CLIENT_SECURE_CONNECTION > 0 {
-		l := len(authPluginData) - 8
+	if h.CapabilityFlags&CLIENT_SECURE_CONNECTION > 0 {
+		l := len(h.AuthPluginData) - 8
 		if l < 13 {
 			l = 13
 		}
-		payload = append(payload, authPluginData[8:]...)
+		payload = append(payload, h.AuthPluginData[8:]...)
 	} else {
 		panic("please CLIENT_SECURE_CONNECTION")
 	}

@@ -4,23 +4,31 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sync/atomic"
 
 	"github.com/Fleurer/hardshard/pkg/mysql"
 	"github.com/siddontang/go-log/log"
 )
 
-type Connection struct {
-	conn     net.Conn
-	packetio *mysql.PacketIO
+var connectionIdCounter uint32 = 10000
 
-	isClosed bool
+type Connection struct {
+	conn         net.Conn
+	packetIO     *mysql.PacketIO
+	packetCoder  *mysql.PacketCoder
+	isClosed     bool
+	connectionId uint32
+	capability   uint32
 }
 
 func NewConnection(conn net.Conn) *Connection {
 	c := &Connection{}
 	c.conn = conn
-	c.packetio = mysql.NewPacketIOByConn(conn)
+	c.packetIO = mysql.NewPacketIOByConn(conn)
+	c.packetCoder = mysql.NewPacketCoder()
 	c.isClosed = false
+	c.connectionId = atomic.AddUint32(&connectionIdCounter, 1)
+	c.capability = 0
 	return c
 }
 
@@ -40,15 +48,15 @@ func (c *Connection) handshake() error {
 
 func (c *Connection) loop() {
 	for {
-		payload, err := c.packetio.ReadPacket()
+		payload, err := c.packetIO.ReadPacket()
 		if err != nil {
-			log.Warn("connection.Run() readPacket error: %s", err.Error())
+			log.Warn("connection.Run() readPacket error=%s", err.Error())
 			return
 		}
 
 		err = c.handleRequestPacket(payload)
 		if err != nil {
-			fmt.Errorf("handleRequestPacket error: %s", err.Error())
+			log.Warn("handleRequestPacket error=%s", err.Error())
 			// c.packetio.WriteErrorPacket(err)
 		}
 
@@ -97,4 +105,17 @@ func (c *Connection) handleRequestPacket(payload []byte) error {
 
 func (c *Connection) writeError(error) error {
 	return nil
+}
+
+func (c *Connection) writeInitialHandshake() error {
+	h := mysql.InitialHandshake{}
+	payload := c.packetCoder.EncodeInitialHandshake(h)
+	return c.packetIO.WritePacket(payload)
+}
+
+func (c *Connection) readHandshakeResponse() error {
+	payload, err := c.packetIO.ReadPacket()
+	if err != nil {
+		return err
+	}
 }
