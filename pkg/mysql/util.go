@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"crypto/rand"
 	"io"
 )
 
@@ -123,4 +124,10 @@ func Uint64ToBytes(n uint64) []byte {
 		byte(n >> 48),
 		byte(n >> 56),
 	}
+}
+
+func GenerateRandBuf(n int) []byte {
+	buf := make([]byte, n)
+	rand.Read(buf)
+	return buf
 }

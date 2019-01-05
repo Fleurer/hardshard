@@ -1,9 +1,7 @@
 package mysql
 
-type CollationId uint8
-
 //charset key is charset name and value is default collation id
-var CharsetIds = map[string]CollationId{
+var CharsetIds = map[string]uint8{
 	"big5":     1,
 	"dec8":     3,
 	"cp850":    4,
@@ -90,7 +88,7 @@ var Charsets = map[string]string{
 	"eucjpms":  "eucjpms_japanese_ci",
 }
 
-var Collations = map[CollationId]string{
+var Collations = map[uint8]string{
 	1:   "big5_chinese_ci",
 	2:   "latin2_czech_cs",
 	3:   "dec8_swedish_ci",
@@ -312,7 +310,7 @@ var Collations = map[CollationId]string{
 	247: "utf8mb4_vietnamese_ci",
 }
 
-var CollationNames = map[string]CollationId{
+var CollationNames = map[string]uint8{
 	"big5_chinese_ci":          1,
 	"latin2_czech_cs":          2,
 	"dec8_swedish_ci":          3,
@@ -535,7 +533,7 @@ var CollationNames = map[string]CollationId{
 }
 
 const (
-	DEFAULT_CHARSET                    = "utf8"
-	DEFAULT_COLLATION_ID   CollationId = 33
-	DEFAULT_COLLATION_NAME string      = "utf8_general_ci"
+	DEFAULT_CHARSET               = "utf8"
+	DEFAULT_COLLATION_ID   uint8  = 33
+	DEFAULT_COLLATION_NAME string = "utf8_general_ci"
 )

@@ -20,7 +20,6 @@ type PacketIO struct {
 	r        io.Reader
 	w        io.Writer
 	Sequence uint8
-	coder    *PacketCoder
 }
 
 func NewPacketIO(r io.Reader, w io.Writer) *PacketIO {
