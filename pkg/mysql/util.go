@@ -5,7 +5,8 @@ import (
 	"io"
 )
 
-func GetLengthEncodedInt(b []byte) (num uint64, isNull bool, n int) {
+// DecodeLencInt decodes the length encoded int
+func DecodeLencInt(b []byte) (num uint64, isNull bool, n int) {
 	switch b[0] {
 	// 251: NULL
 	case 0xfb:
@@ -36,7 +37,7 @@ func GetLengthEncodedInt(b []byte) (num uint64, isNull bool, n int) {
 	return
 }
 
-func PutLengthEncodedInt(n uint64) []byte {
+func EncodeLencInt(n uint64) []byte {
 	// ==========================  ======
 	// value                       bytes
 	// ==========================  ======
@@ -58,9 +59,9 @@ func PutLengthEncodedInt(n uint64) []byte {
 	return nil
 }
 
-func GetLengthEnodedString(b []byte) ([]byte, bool, int, error) {
+func DecodeLencString(b []byte) ([]byte, bool, int, error) {
 	// Get length
-	num, isNull, n := GetLengthEncodedInt(b)
+	num, isNull, n := DecodeLencInt(b)
 	if num < 1 {
 		return nil, isNull, n, nil
 	}
@@ -74,16 +75,16 @@ func GetLengthEnodedString(b []byte) ([]byte, bool, int, error) {
 	return nil, false, n, io.EOF
 }
 
-func PutLengthEncodedString(b []byte) []byte {
+func EncodeLencString(b []byte) []byte {
 	data := make([]byte, 0, len(b)+9)
-	data = append(data, PutLengthEncodedInt(uint64(len(b)))...)
+	data = append(data, EncodeLencInt(uint64(len(b)))...)
 	data = append(data, b...)
 	return data
 }
 
-func SkipLengthEnodedString(b []byte) (int, error) {
+func SkipLencString(b []byte) (int, error) {
 	// Get length
-	num, _, n := GetLengthEncodedInt(b)
+	num, _, n := DecodeLencInt(b)
 	if num < 1 {
 		return n, nil
 	}
@@ -97,14 +98,14 @@ func SkipLengthEnodedString(b []byte) (int, error) {
 	return n, io.EOF
 }
 
-func Uint16ToBytes(n uint16) []byte {
+func EncodeUint16(n uint16) []byte {
 	return []byte{
 		byte(n),
 		byte(n >> 8),
 	}
 }
 
-func Uint32ToBytes(n uint32) []byte {
+func EncodeUint32(n uint32) []byte {
 	return []byte{
 		byte(n),
 		byte(n >> 8),
@@ -113,7 +114,7 @@ func Uint32ToBytes(n uint32) []byte {
 	}
 }
 
-func Uint64ToBytes(n uint64) []byte {
+func EncodeUint64(n uint64) []byte {
 	return []byte{
 		byte(n),
 		byte(n >> 8),

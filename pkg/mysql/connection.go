@@ -28,7 +28,7 @@ func NewConnection(conn net.Conn) *Connection {
 		packetIO:     NewPacketIOByConn(conn),
 		isClosed:     false,
 		connectionId: atomic.AddUint32(&connectionIdCounter, 1),
-		capabilities: 0,
+		capabilities: CLIENT_PLUGIN_AUTH | CLIENT_SECURE_CONNECTION,
 		status:       SERVER_STATUS_AUTOCOMMIT,
 		salt:         GenerateRandBuf(20),
 		collationId:  DEFAULT_COLLATION_ID,
@@ -115,13 +115,12 @@ func (c *Connection) writeOK(status uint16, affectedRows uint64, insertId uint64
 	// - EOF: header = 0xfe and length of packet < 9
 	payload := make([]byte, 0, 32)
 	payload = append(payload, OK_HEADER)
-	payload = append(payload, PutLengthEncodedInt(affectedRows)...)
-	payload = append(payload, PutLengthEncodedInt(insertId)...)
-
+	payload = append(payload, EncodeLencInt(affectedRows)...)
+	payload = append(payload, EncodeLencInt(insertId)...)
 	if c.capabilities&CLIENT_PROTOCOL_41 > 0 {
 		// if CLIENT_PROTOCOL_41 is set, the packet contains a warning count.
-		payload = append(payload, Uint16ToBytes(status)...) // status_flags
-		payload = append(payload, Uint16ToBytes(0)...)      // number of warnings
+		payload = append(payload, EncodeUint16(status)...) // status_flags
+		payload = append(payload, EncodeUint16(0)...)      // number of warnings
 	}
 	return c.packetIO.WritePacket(payload)
 }
@@ -131,8 +130,8 @@ func (c *Connection) writeEOF(warnings uint16, status uint16) error {
 	payload := make([]byte, 0, 5)
 	payload = append(payload, EOF_HEADER)
 	if c.capabilities&CLIENT_PROTOCOL_41 > 0 {
-		payload = append(payload, Uint16ToBytes(warnings)...) // number of warnings
-		payload = append(payload, Uint16ToBytes(status)...)   // SERVER_STATUS_flags_enum
+		payload = append(payload, EncodeUint16(warnings)...) // number of warnings
+		payload = append(payload, EncodeUint16(status)...)   // SERVER_STATUS_flags_enum
 	}
 	return c.packetIO.WritePacket(payload)
 }
@@ -150,7 +149,7 @@ func (c *Connection) writeError(e error) error {
 
 	payload := make([]byte, 0, 16+len(m.Message))
 	payload = append(payload, ERR_HEADER)
-	payload = append(payload, Uint16ToBytes(m.Code)...)
+	payload = append(payload, EncodeUint16(m.Code)...)
 
 	if c.capabilities&CLIENT_PROTOCOL_41 > 0 {
 		// It contains a SQL state value if CLIENT_PROTOCOL_41 is enabled.
@@ -170,7 +169,7 @@ func (c *Connection) writeInitialHandshake() error {
 	// string[NULL], server version
 	payload = append(payload, SERVER_VERSION...)
 	// int32, connection id
-	payload = append(payload, Uint32ToBytes(c.connectionId)...)
+	payload = append(payload, EncodeUint32(c.connectionId)...)
 	// string[8], auth-plugin-data, part-1
 	payload = append(payload, c.salt[0:8]...)
 	// 1 byte, [00] filter
@@ -180,7 +179,7 @@ func (c *Connection) writeInitialHandshake() error {
 	// 1 byte, charset, default utf-8
 	payload = append(payload, byte(c.collationId))
 	// 2 bytes, status
-	payload = append(payload, Uint16ToBytes(c.status)...)
+	payload = append(payload, EncodeUint16(c.status)...)
 	// 2 bytes, capability_flags_2, upper 2 bytes of the capabilities
 	payload = append(payload, byte(c.capabilities>>16), byte(c.capabilities>>24))
 	// 1 byte, length of auth-plugin-data or 0
@@ -208,9 +207,10 @@ func (c *Connection) writeInitialHandshake() error {
 }
 
 func (c *Connection) readHandshakeResponse() error {
-	// payload, err := c.packetIO.ReadPacket()
-	// if err != nil {
-	//	return err
-	//}
+	buf, err := c.packetIO.ReadPacket()
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s", buf)
 	return nil
 }
