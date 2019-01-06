@@ -204,9 +204,8 @@ func (c *Connection) writeInitialHandshake() error {
 	// string[$len]   auth-plugin-data-part-2
 	// $len=MAX(13, length of auth-plugin-data - 8)
 	if c.capabilities&CLIENT_SECURE_CONNECTION > 0 {
-		l := len(c.salt) - 8
-		if l < 13 {
-			l = 13
+		if len(c.salt[8:]) > 13 {
+			panic("please len(salt[8:]) <= 13")
 		}
 		payload = append(payload, c.salt[8:]...)
 	} else {
@@ -233,6 +232,7 @@ func (c *Connection) readHandshakeResponse() (*handkshakeResponse, error) {
 	if h.charset, err = pr.ReadByte(); err != nil {
 		return nil, err
 	}
+	// reserved 23 bytes
 	pr.Next(23)
 	if h.user, err = pr.ReadBytes('\x00'); err != nil {
 		return nil, err
