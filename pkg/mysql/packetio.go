@@ -7,6 +7,8 @@ package mysql
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
@@ -20,6 +22,11 @@ type PacketIO struct {
 	r        io.Reader
 	w        io.Writer
 	Sequence uint8
+}
+
+type PacketReader struct {
+	buf []byte
+	r   *bytes.Reader
 }
 
 func NewPacketIO(r io.Reader, w io.Writer) *PacketIO {
@@ -116,4 +123,43 @@ func (pio *PacketIO) WritePacket(payload []byte) error {
 		payload = payload[length:]
 	}
 	return nil
+}
+
+func (pio *PacketIO) NewPacketReader() (*PacketReader, error) {
+	buf, err := pio.ReadPacket()
+	if err != nil {
+		return nil, err
+	}
+	r := bytes.NewReader(buf)
+	pr := &PacketReader{
+		r:   r,
+		buf: buf,
+	}
+	return pr, nil
+}
+
+func (pr *PacketReader) Read(buf []byte) (int, error) {
+	return pr.r.Read(buf)
+}
+
+func (pr *PacketReader) ReadByte() (byte, error) {
+	buf := []byte{0}
+	_, err := io.ReadFull(pr.r, buf)
+	if err != nil {
+		return 0, err
+	}
+	return buf[0], nil
+}
+
+func (pr *PacketReader) ReadUint32() (uint32, error) {
+	buf := []byte{0, 0, 0, 0}
+	_, err := io.ReadFull(pr.r, buf)
+	if err != nil {
+		return 0, err
+	}
+	return binary.LittleEndian.Uint32(buf), nil
+}
+
+func (pr *PacketReader) SkipBytes(offset int64) (int64, error) {
+	return pr.r.Seek(offset, io.SeekCurrent)
 }

@@ -22,6 +22,13 @@ type Connection struct {
 	collationId  uint8
 }
 
+type handkshakeResponse struct {
+	capabilities  uint32
+	charset       byte
+	maxPacketSize uint32
+	username      []byte
+}
+
 func NewConnection(conn net.Conn) *Connection {
 	c := &Connection{
 		conn:         conn,
@@ -207,10 +214,21 @@ func (c *Connection) writeInitialHandshake() error {
 }
 
 func (c *Connection) readHandshakeResponse() error {
-	buf, err := c.packetIO.ReadPacket()
+	// https://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse
+	pr, err := c.packetIO.NewPacketReader()
+	h := handkshakeResponse{}
 	if err != nil {
 		return err
 	}
-	fmt.Printf("%s", buf)
+	if h.capabilities, err = pr.ReadUint32(); err != nil {
+		return err
+	}
+	if h.maxPacketSize, err = pr.ReadUint32(); err != nil {
+		return err
+	}
+	if h.charset, err = pr.ReadByte(); err != nil {
+		return err
+	}
+	pr.SkipBytes(23)
 	return nil
 }
