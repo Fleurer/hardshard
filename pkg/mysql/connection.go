@@ -23,10 +23,14 @@ type Connection struct {
 }
 
 type handkshakeResponse struct {
-	capabilities  uint32
-	charset       byte
-	maxPacketSize uint32
-	username      []byte
+	capabilities   uint32
+	charset        byte
+	maxPacketSize  uint32
+	user           []byte
+	authData       []byte
+	db             []byte
+	authPluginName []byte
+	attrs          map[string]string
 }
 
 func NewConnection(conn net.Conn) *Connection {
@@ -213,25 +217,59 @@ func (c *Connection) writeInitialHandshake() error {
 	return c.packetIO.WritePacket(payload)
 }
 
-func (c *Connection) readHandshakeResponse() error {
-	// https://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse
+// https://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse
+func (c *Connection) readHandshakeResponse() (*handkshakeResponse, error) {
 	pr, err := c.packetIO.NewPacketReader()
 	h := handkshakeResponse{}
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if h.capabilities, err = pr.ReadUint32(); err != nil {
-		return err
+		return nil, err
 	}
 	if h.maxPacketSize, err = pr.ReadUint32(); err != nil {
-		return err
+		return nil, err
 	}
 	if h.charset, err = pr.ReadByte(); err != nil {
-		return err
+		return nil, err
 	}
 	pr.Next(23)
-	if h.username, err = pr.ReadBytes('\x00'); err != nil {
-		return err
+	if h.user, err = pr.ReadBytes('\x00'); err != nil {
+		return nil, err
 	}
-	return nil
+	if h.capabilities&CLIENT_SECURE_CONNECTION > 0 {
+		n, err := pr.ReadByte()
+		if err != nil {
+			return nil, err
+		}
+		h.authData = pr.Next(int(n))
+	}
+	if h.capabilities&CLIENT_CONNECT_WITH_DB > 0 {
+		if h.db, err = pr.ReadBytes('\x00'); err != nil {
+			return nil, err
+		}
+	}
+	if h.capabilities&CLIENT_PLUGIN_AUTH > 0 {
+		if h.authPluginName, err = pr.ReadBytes('\x00'); err != nil {
+			return nil, err
+		}
+	}
+	if h.capabilities&CLIENT_CONNECT_ATTRS > 0 {
+		n, _, err := pr.ReadLencInt()
+		if err != nil {
+			return nil, err
+		}
+		for i := uint64(0); i < n; i++ {
+			key, err := pr.ReadLencString()
+			if err != nil {
+				return nil, err
+			}
+			val, err := pr.ReadLencString()
+			if err != nil {
+				return nil, err
+			}
+			h.attrs[key] = val
+		}
+	}
+	return &h, nil
 }

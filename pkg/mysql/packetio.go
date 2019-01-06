@@ -130,7 +130,6 @@ func (pio *PacketIO) NewPacketReader() (*PacketReader, error) {
 	if err != nil {
 		return nil, err
 	}
-	r := bytes.NewReader(buf)
 	pr := &PacketReader{
 		buf:    buf,
 		buffer: bytes.NewBuffer(buf),
@@ -146,6 +145,15 @@ func (pr *PacketReader) ReadByte() (byte, error) {
 	return pr.buffer.ReadByte()
 }
 
+func (pr *PacketReader) ReadUint16() (uint16, error) {
+	buf := []byte{0, 0}
+	_, err := io.ReadFull(pr.buffer, buf)
+	if err != nil {
+		return 0, err
+	}
+	return binary.LittleEndian.Uint16(buf), nil
+}
+
 func (pr *PacketReader) ReadUint32() (uint32, error) {
 	buf := []byte{0, 0, 0, 0}
 	_, err := io.ReadFull(pr.buffer, buf)
@@ -155,10 +163,63 @@ func (pr *PacketReader) ReadUint32() (uint32, error) {
 	return binary.LittleEndian.Uint32(buf), nil
 }
 
+func (pr *PacketReader) ReadUint24() (uint32, error) {
+	buf := []byte{0, 0, 0}
+	_, err := io.ReadFull(pr.buffer, buf)
+	if err != nil {
+		return 0, err
+	}
+	num := uint32(buf[1]) | uint32(buf[2])<<8 | uint32(buf[3])<<16
+	return num, nil
+}
+
+func (pr *PacketReader) ReadUint64() (uint64, error) {
+	buf := []byte{0, 0, 0, 0, 0, 0, 0, 0}
+	_, err := io.ReadFull(pr.buffer, buf)
+	if err != nil {
+		return 0, err
+	}
+	return binary.LittleEndian.Uint64(buf), nil
+}
+
 func (pr *PacketReader) Next(n int) []byte {
 	return pr.buffer.Next(n)
 }
 
 func (pr *PacketReader) ReadBytes(delim byte) ([]byte, error) {
 	return pr.buffer.ReadBytes(delim)
+}
+
+func (pr *PacketReader) ReadLencInt() (uint64, bool, error) {
+	b, err := pr.ReadByte()
+	if err != nil {
+		return 0, false, err
+	}
+	switch b {
+	case 0xfb: // NULL
+		return 0, true, nil
+	case 0xfc: // 2 bytes
+		n, err := pr.ReadUint16()
+		return uint64(n), false, err
+	case 0xfd: // 3 bytes
+		n, err := pr.ReadUint24()
+		return uint64(n), false, err
+	case 0xfe: // 8 bytes
+		n, err := pr.ReadUint64()
+		return n, false, err
+	}
+	// 0~250
+	return uint64(b), false, nil
+}
+
+func (pr *PacketReader) ReadLencString() (string, error) {
+	num, _, err := pr.ReadLencInt()
+	if err != nil {
+		return "", err
+	}
+	if num < 1 {
+		return "", nil
+	}
+	bs := pr.Next(int(num))
+	return string(bs), nil
 }
