@@ -229,7 +229,7 @@ func (c *Connection) readHandshakeResponse() error {
 	if h.charset, err = pr.ReadByte(); err != nil {
 		return err
 	}
-	pr.SkipBytes(23)
+	pr.Next(23)
 	if h.username, err = pr.ReadBytes('\x00'); err != nil {
 		return err
 	}

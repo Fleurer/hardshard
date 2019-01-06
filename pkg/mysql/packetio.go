@@ -25,8 +25,8 @@ type PacketIO struct {
 }
 
 type PacketReader struct {
-	buf      []byte
-	position int
+	buf    []byte
+	buffer *bytes.Buffer
 }
 
 func NewPacketIO(r io.Reader, w io.Writer) *PacketIO {
@@ -132,55 +132,33 @@ func (pio *PacketIO) NewPacketReader() (*PacketReader, error) {
 	}
 	r := bytes.NewReader(buf)
 	pr := &PacketReader{
-		buf:      buf,
-		position: 0,
+		buf:    buf,
+		buffer: bytes.NewBuffer(buf),
 	}
 	return pr, nil
 }
 
 func (pr *PacketReader) Read(rbuf []byte) (int, error) {
-	size := len(rbuf)
-	if pr.position+size > len(pr.buf) {
-		return 0, io.EOF
-	}
-	copy(rbuf, pr.buf[pr.position:pr.position+size])
-	pr.position += size
-	return size, nil
+	return pr.buffer.Read(rbuf)
 }
 
 func (pr *PacketReader) ReadByte() (byte, error) {
-	buf := []byte{0}
-	_, err := io.ReadFull(pr, buf)
-	if err != nil {
-		return 0, err
-	}
-	return buf[0], nil
+	return pr.buffer.ReadByte()
 }
 
 func (pr *PacketReader) ReadUint32() (uint32, error) {
 	buf := []byte{0, 0, 0, 0}
-	_, err := io.ReadFull(pr, buf)
+	_, err := io.ReadFull(pr.buffer, buf)
 	if err != nil {
 		return 0, err
 	}
 	return binary.LittleEndian.Uint32(buf), nil
 }
 
-func (pr *PacketReader) SkipBytes(offset int) error {
-	if pr.position+offset > len(pr.buf) {
-		return io.EOF
-	}
-	pr.position += offset
-	return nil
+func (pr *PacketReader) Next(n int) []byte {
+	return pr.buffer.Next(n)
 }
 
 func (pr *PacketReader) ReadBytes(delim byte) ([]byte, error) {
-	for i := pr.position; i < len(pr.buf); i++ {
-		if pr.buf[i] == delim {
-			bs := pr.buf[pr.position:i]
-			pr.position = i + 1
-			return bs, nil
-		}
-	}
-	return nil, io.EOF
+	return pr.buffer.ReadBytes(delim)
 }
