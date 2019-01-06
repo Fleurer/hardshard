@@ -230,5 +230,8 @@ func (c *Connection) readHandshakeResponse() error {
 		return err
 	}
 	pr.SkipBytes(23)
+	if h.username, err = pr.ReadBytes('\x00'); err != nil {
+		return err
+	}
 	return nil
 }
