@@ -1,16 +1,6 @@
 package mysql
 
-import (
-	"bytes"
-	"fmt"
-	"testing"
-)
-
-func setupPacketCoder() *PacketCoder {
-	c := &PacketCoder{capabilities: CLIENT_PROTOCOL_41}
-	return c
-}
-
+var blah = `
 func TestEncodeOK(t *testing.T) {
 	c := setupPacketCoder()
 	payload := c.EncodeOK(0, 233, 233)
@@ -68,3 +58,4 @@ func TestEncodeEOF(t *testing.T) {
 		t.Fatalf("bad result %v, expected: %v", payload, expectedPayload)
 	}
 }
+`

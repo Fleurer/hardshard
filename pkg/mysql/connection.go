@@ -48,12 +48,13 @@ func NewConnection(conn net.Conn) *Connection {
 }
 
 func (c *Connection) Run() {
+	defer func() {
+		c.Close()
+	}()
 	if err := c.handshake(); err != nil {
 		c.writeError(err)
-		c.Close()
 		return
 	}
-
 	c.loop()
 }
 

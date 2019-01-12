@@ -60,7 +60,7 @@ func TestWritePacket1(t *testing.T) {
 		t.Fatalf("invalid header: %v", buf.Bytes()[0:4])
 	}
 	if !bytes.Equal(buf.Bytes()[4:], payload) {
-		t.Fatalf("invalid payload", buf.Bytes()[4:])
+		t.Fatalf("invalid payload: %s", buf.Bytes()[4:])
 	}
 }
 

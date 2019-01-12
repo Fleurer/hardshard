@@ -4,6 +4,7 @@ import (
 	"net"
 	"runtime"
 
+	"github.com/Fleurer/hardshard/pkg/mysql"
 	"github.com/siddontang/go-log/log"
 )
 
@@ -52,7 +53,7 @@ func (s *Server) Close() {
 }
 
 func (s *Server) handleConn(conn net.Conn) {
-	myconn := NewConnection(conn)
+	myconn := mysql.NewConnection(conn)
 
 	defer func() {
 		if err := recover(); err != nil {
