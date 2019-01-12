@@ -10,7 +10,9 @@ import (
 
 func setupConnnection() (*Connection, net.Conn) {
 	server, client := net.Pipe()
-	return NewConnection(server), client
+	conn := NewConnection(server)
+	conn.salt = make([]byte, 20)
+	return conn, client
 }
 
 func TestWriteOk(t *testing.T) {
@@ -87,6 +89,26 @@ func TestWriteError2(t *testing.T) {
 	expectedBuf := []byte{
 		16, 0, 0, 0,
 		255, 81, 4, 35, 72, 89, 48, 48, 48, 111, 104, 32, 102, 117, 99, 107,
+	}
+	if !bytes.Equal(buf, expectedBuf) {
+		t.Fatalf("bad result: %v, expected: %v", buf, expectedBuf)
+	}
+}
+
+func TestWriteInitialHandshake(t *testing.T) {
+	conn, client := setupConnnection()
+	defer client.Close()
+	go func() {
+		conn.writeInitialHandshake()
+		conn.Close()
+	}()
+	buf, err := ioutil.ReadAll(client)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	expectedBuf := []byte{
+		61, 0, 0, 0,
+		10, 53, 46, 53, 46, 51, 49, 45, 109, 105, 120, 101, 114, 45, 48, 46, 49, 21, 39, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 130, 33, 2, 0, 24, 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 	if !bytes.Equal(buf, expectedBuf) {
 		t.Fatalf("bad result: %v, expected: %v", buf, expectedBuf)
