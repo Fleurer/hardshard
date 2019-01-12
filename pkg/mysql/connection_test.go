@@ -48,3 +48,26 @@ func TestWriteEOF(t *testing.T) {
 		t.Fatalf("bad result: %v, expected: %v", buf, expectedBuf)
 	}
 }
+
+func TestWriteError(t *testing.T) {
+	conn, client := setupConnnection()
+	defer client.Close()
+	go func() {
+		m := NewMySqlError(ER_NO_TABLES_USED, "No tables used")
+		conn.writeError(m)
+		conn.Close()
+	}()
+	buf, err := ioutil.ReadAll(client)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	expectedBuf := []byte{
+		23, 0, 0, 0,
+		0xff, 0x48, 0x04,
+		0x23, 0x48, 0x59, 0x30, 0x30, 0x30, 0x4e, 0x6f, 0x20,
+		0x74, 0x61, 0x62, 0x6c, 0x65, 0x73, 0x20, 0x75, 0x73, 0x65, 0x64,
+	}
+	if !bytes.Equal(buf, expectedBuf) {
+		t.Fatalf("bad result: %v, expected: %v", buf, expectedBuf)
+	}
+}
