@@ -59,6 +59,18 @@ func (c *Connection) Run() {
 }
 
 func (c *Connection) handshake() error {
+	if err := c.writeInitialHandshake(); err != nil {
+		log.Error("handshake: writeInitialHandshake fail: err=%s", err)
+		return err
+	}
+	if _, err := c.readHandshakeResponse(); err != nil {
+		log.Error("handshake: readHandshakeResponse fail: err=%s", err)
+		return err
+	}
+	if err := c.writeOK(0, 0, 0); err != nil {
+		log.Error("handshake: readHandshakeResponse fail: err=%s", err)
+		return err
+	}
 	return nil
 }
 
