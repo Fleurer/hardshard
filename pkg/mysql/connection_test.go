@@ -28,3 +28,23 @@ func TestWriteOk(t *testing.T) {
 		t.Fatalf("bad result: %v, expected: %v", buf, expectedBuf)
 	}
 }
+
+func TestWriteEOF(t *testing.T) {
+	conn, client := setupConnnection()
+	defer client.Close()
+	go func() {
+		conn.writeEOF(123, 124)
+		conn.Close()
+	}()
+	buf, err := ioutil.ReadAll(client)
+	if err != nil {
+		t.Fatalf("err: %s", err)
+	}
+	expectedBuf := []byte{
+		5, 0, 0, 0,
+		254, 123, 0, 124, 0,
+	}
+	if !bytes.Equal(buf, expectedBuf) {
+		t.Fatalf("bad result: %v, expected: %v", buf, expectedBuf)
+	}
+}
