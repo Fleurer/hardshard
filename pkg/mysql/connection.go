@@ -39,7 +39,7 @@ func NewConnection(conn net.Conn) *Connection {
 		packetIO:     NewPacketIOByConn(conn),
 		isClosed:     false,
 		connectionId: atomic.AddUint32(&connectionIdCounter, 1),
-		capabilities: CLIENT_PLUGIN_AUTH | CLIENT_SECURE_CONNECTION | CLIENT_CONNECT_WITH_DB | CLIENT_CONNECT_ATTRS,
+		capabilities: CLIENT_PLUGIN_AUTH | CLIENT_SECURE_CONNECTION | CLIENT_CONNECT_WITH_DB | CLIENT_CONNECT_ATTRS | CLIENT_PROTOCOL_41,
 		status:       SERVER_STATUS_AUTOCOMMIT,
 		salt:         GenerateRandBuf(20),
 		collationId:  DEFAULT_COLLATION_ID,

@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"net"
 	"testing"
@@ -14,17 +13,18 @@ func setupConnnection() (*Connection, net.Conn) {
 }
 
 func TestWriteOk(t *testing.T) {
-	fmt.Printf("blah!")
 	conn, client := setupConnnection()
-	defer conn.Close()
 	defer client.Close()
-	conn.writeOK(0, 233, 234)
+	go func() {
+		conn.writeOK(5, 233, 234)
+		conn.Close()
+	}()
 	buf, err := ioutil.ReadAll(client)
 	if err != nil {
 		t.Fatalf("err: %s", err)
 	}
-	expectedBuf := []byte{0, 233, 233, 0, 0, 0, 0}
+	expectedBuf := []byte{7, 0, 0, 0, 0, 233, 234, 5, 0, 0, 0}
 	if !bytes.Equal(buf, expectedBuf) {
-		t.Fatalf("bad result: %s, expected: %s", buf, expectedBuf)
+		t.Fatalf("bad result: %v, expected: %v", buf, expectedBuf)
 	}
 }
