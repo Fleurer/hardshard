@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"sync/atomic"
@@ -10,6 +11,8 @@ import (
 )
 
 var connectionIdCounter uint32 = 10000
+
+var DEFAULT_CAPABILITIES uint32 = CLIENT_PLUGIN_AUTH | CLIENT_SECURE_CONNECTION | CLIENT_CONNECT_WITH_DB | CLIENT_CONNECT_ATTRS | CLIENT_PROTOCOL_41
 
 const debug = true
 
@@ -35,18 +38,25 @@ type handkshakeResponse struct {
 	attrs          map[string]string
 }
 
+func (h handkshakeResponse) String() string {
+	return fmt.Sprintf("handshakeResponse[capabilities: %d, charset: %d, user: %s, authData: %v, db: %s, authPluginName: %s, attrs: %v]",
+		h.capabilities, h.charset, h.user, h.authData, h.db, h.authPluginName, h.attrs)
+}
+
 func NewConnection(conn net.Conn) *Connection {
 	c := &Connection{
 		conn:         conn,
 		packetIO:     NewPacketIOByConn(conn),
 		isClosed:     false,
 		connectionId: atomic.AddUint32(&connectionIdCounter, 1),
-		capabilities: CLIENT_PLUGIN_AUTH | CLIENT_SECURE_CONNECTION | CLIENT_CONNECT_WITH_DB | CLIENT_CONNECT_ATTRS | CLIENT_PROTOCOL_41,
+		capabilities: DEFAULT_CAPABILITIES,
 		status:       SERVER_STATUS_AUTOCOMMIT,
 		salt:         GenerateRandBuf(20),
 		collationId:  DEFAULT_COLLATION_ID,
 	}
-	c.salt = []byte("salt1salt2salt3salt4")
+	if debug {
+		c.salt = []byte("salt1salt2salt3salt4")
+	}
 	return c
 }
 
@@ -241,7 +251,11 @@ func (c *Connection) writeInitialHandshake() error {
 // https://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse
 func (c *Connection) readHandshakeResponse() (*handkshakeResponse, error) {
 	pr, err := c.packetIO.NewPacketReader()
+	if debug {
+		PrintBytes(pr.buf)
+	}
 	h := handkshakeResponse{}
+	h.attrs = map[string]string{}
 	if err != nil {
 		return nil, err
 	}
@@ -268,27 +282,29 @@ func (c *Connection) readHandshakeResponse() (*handkshakeResponse, error) {
 	}
 	if h.capabilities&CLIENT_CONNECT_WITH_DB > 0 {
 		if h.db, err = pr.ReadBytes('\x00'); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fail on read h.db: %s", err)
 		}
 	}
 	if h.capabilities&CLIENT_PLUGIN_AUTH > 0 {
 		if h.authPluginName, err = pr.ReadBytes('\x00'); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fail on read h.authPluginName: %s", err)
 		}
 	}
 	if h.capabilities&CLIENT_CONNECT_ATTRS > 0 {
-		n, _, err := pr.ReadLencInt()
+		_, _, err := pr.ReadLencInt()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fail on read attrs: %s", err)
 		}
-		for i := uint64(0); i < n; i++ {
+		for i := uint64(0); ; i++ {
 			key, err := pr.ReadLencString()
-			if err != nil {
-				return nil, err
+			if err == io.EOF {
+				break
+			} else if err != nil {
+				return nil, fmt.Errorf("fail on read attrs key: %s", err)
 			}
 			val, err := pr.ReadLencString()
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("fail on read attrs val: %s", err)
 			}
 			h.attrs[key] = val
 		}
