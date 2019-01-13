@@ -63,12 +63,14 @@ func (c *Connection) handshake() error {
 		log.Error("handshake: writeInitialHandshake fail: err=%s", err)
 		return err
 	}
-	if _, err := c.readHandshakeResponse(); err != nil {
+	handshake, err := c.readHandshakeResponse()
+	fmt.Printf("client handshake: %v", handshake)
+	if err != nil {
 		log.Error("handshake: readHandshakeResponse fail: err=%s", err)
 		return err
 	}
 	if err := c.writeOK(0, 0, 0); err != nil {
-		log.Error("handshake: readHandshakeResponse fail: err=%s", err)
+		log.Error("handshake: writeOK fail: err=%s", err)
 		return err
 	}
 	return nil
@@ -258,6 +260,8 @@ func (c *Connection) readHandshakeResponse() (*handkshakeResponse, error) {
 		h.authData = pr.Next(int(n))
 	}
 	if h.capabilities&CLIENT_CONNECT_WITH_DB > 0 {
+		fmt.Printf("readHandshakeResponse: user:%s\n", h.user)
+		pr.PrintPacket()
 		if h.db, err = pr.ReadBytes('\x00'); err != nil {
 			return nil, err
 		}
