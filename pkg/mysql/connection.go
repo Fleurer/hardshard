@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"net"
@@ -127,8 +128,7 @@ func (c *Connection) Close() error {
 func (c *Connection) handleRequestPacket(payload []byte) error {
 	cmd := payload[0]
 	body := payload[1:]
-	fmt.Printf("cmd: %v \n", cmd)
-	PrintBytes(body)
+	fmt.Printf("cmd: %v\n%s\n", cmd, hex.Dump(body))
 	c.writeOK(0, 0, 0)
 
 	switch cmd {
@@ -245,7 +245,7 @@ func (c *Connection) writeInitialHandshake() error {
 	// string[NUL] auth-plugin name, if capabilities & CLIENT_PLUGIN_AUTH
 	payload = append(payload, 0)
 	if debug {
-		PrintBytes(payload)
+		fmt.Printf("initialHandhshake: \n%s", hex.Dump(payload))
 	}
 	return c.packetIO.WritePacket(payload)
 }
@@ -255,6 +255,9 @@ func (c *Connection) readHandshakeResponse() (*handkshakeResponse, error) {
 	pr, err := c.packetIO.NewPacketReader()
 	if err != nil {
 		return nil, err
+	}
+	if debug {
+		fmt.Printf("readHandshakeResponse:\n%s\n", hex.Dump(pr.buf))
 	}
 	h := handkshakeResponse{}
 	h.attrs = map[string]string{}

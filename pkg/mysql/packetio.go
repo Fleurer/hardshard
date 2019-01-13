@@ -141,10 +141,6 @@ func (pio *PacketIO) NewPacketReader() (*PacketReader, error) {
 	return pr, nil
 }
 
-func (pr *PacketReader) PrintPacket() {
-	PrintBytes(pr.buf)
-}
-
 func (pr *PacketReader) Read(rbuf []byte) (int, error) {
 	return pr.buffer.Read(rbuf)
 }
