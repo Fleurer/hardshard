@@ -11,6 +11,8 @@ import (
 
 var connectionIdCounter uint32 = 10000
 
+const debug = true
+
 type Connection struct {
 	conn         net.Conn
 	isClosed     bool
@@ -44,6 +46,7 @@ func NewConnection(conn net.Conn) *Connection {
 		salt:         GenerateRandBuf(20),
 		collationId:  DEFAULT_COLLATION_ID,
 	}
+	c.salt = []byte("salt1salt2salt3salt4")
 	return c
 }
 
@@ -194,6 +197,7 @@ func (c *Connection) writeInitialHandshake() error {
 	payload = append(payload, 10)
 	// string[NULL], server version
 	payload = append(payload, SERVER_VERSION...)
+	payload = append(payload, 0)
 	// int32, connection id
 	payload = append(payload, EncodeUint32(c.connectionId)...)
 	// string[8], auth-plugin-data, part-1
@@ -228,6 +232,9 @@ func (c *Connection) writeInitialHandshake() error {
 	}
 	// string[NUL] auth-plugin name, if capabilities & CLIENT_PLUGIN_AUTH
 	payload = append(payload, 0)
+	if debug {
+		PrintBytes(payload)
+	}
 	return c.packetIO.WritePacket(payload)
 }
 
@@ -255,13 +262,11 @@ func (c *Connection) readHandshakeResponse() (*handkshakeResponse, error) {
 	if h.capabilities&CLIENT_SECURE_CONNECTION > 0 {
 		n, err := pr.ReadByte()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("fail on read h.authData: %s", err)
 		}
 		h.authData = pr.Next(int(n))
 	}
 	if h.capabilities&CLIENT_CONNECT_WITH_DB > 0 {
-		fmt.Printf("readHandshakeResponse: user:%s\n", h.user)
-		pr.PrintPacket()
 		if h.db, err = pr.ReadBytes('\x00'); err != nil {
 			return nil, err
 		}

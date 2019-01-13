@@ -138,30 +138,7 @@ func (pio *PacketIO) NewPacketReader() (*PacketReader, error) {
 }
 
 func (pr *PacketReader) PrintPacket() {
-	chunkSize := 16
-	for n := 0; n <= len(pr.buf); n += chunkSize {
-		l := n + chunkSize
-		if l > len(pr.buf) {
-			l = len(pr.buf)
-		}
-		s := pr.buf[n:l]
-		for i := 0; i < chunkSize; i++ {
-			if i < len(s) {
-				fmt.Printf("%02X ", s[i])
-			} else {
-				fmt.Printf("   ")
-			}
-		}
-		fmt.Printf("\t")
-		for i := 0; i < len(s); i++ {
-			if s[i] >= 32 && s[i] < 127 {
-				fmt.Printf("%c", s[i])
-			} else {
-				fmt.Printf(".")
-			}
-		}
-		fmt.Printf("\n")
-	}
+	PrintBytes(pr.buf)
 }
 
 func (pr *PacketReader) Read(rbuf []byte) (int, error) {

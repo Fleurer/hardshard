@@ -1,7 +1,7 @@
 package mysql
 
 const (
-	SERVER_VERSION string = "5.5.31-mixer-0.1"
+	SERVER_VERSION string = "5.5.31-hardshard-0.1"
 )
 
 const (

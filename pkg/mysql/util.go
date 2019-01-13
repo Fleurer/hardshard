@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"crypto/rand"
+	"fmt"
 	"io"
 )
 
@@ -131,4 +132,32 @@ func GenerateRandBuf(n int) []byte {
 	buf := make([]byte, n)
 	rand.Read(buf)
 	return buf
+}
+
+func PrintBytes(buf []byte) {
+	chunkSize := 16
+	for n := 0; n <= len(buf); n += chunkSize {
+		l := n + chunkSize
+		if l > len(buf) {
+			l = len(buf)
+		}
+		s := buf[n:l]
+		for i := 0; i < chunkSize; i++ {
+			if i < len(s) {
+				fmt.Printf("%02X ", s[i])
+			} else {
+				fmt.Printf("   ")
+			}
+		}
+		fmt.Printf("\t")
+		for i := 0; i < len(s); i++ {
+			if s[i] >= 32 && s[i] < 127 {
+				fmt.Printf("%c", s[i])
+			} else {
+				fmt.Printf(".")
+			}
+		}
+		fmt.Printf("\n")
+	}
+
 }
