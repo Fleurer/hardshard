@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"os"
 	"sync/atomic"
 
 	"github.com/siddontang/go-log/log"
@@ -77,7 +76,8 @@ func (c *Connection) handshake() error {
 		return err
 	}
 	handshake, err := c.readHandshakeResponse()
-	fmt.Printf("client handshake: %v", handshake)
+	// TODO: aut
+	fmt.Printf("handshake: %s\n", handshake)
 	if err != nil {
 		log.Error("handshake: readHandshakeResponse fail: err=%s", err)
 		return err
@@ -91,6 +91,7 @@ func (c *Connection) handshake() error {
 
 func (c *Connection) loop() {
 	for {
+		c.packetIO.ResetSequence()
 		payload, err := c.packetIO.ReadPacket()
 		if err != nil {
 			log.Warn("connection.Run() readPacket error=%s", err.Error())
@@ -126,8 +127,9 @@ func (c *Connection) Close() error {
 func (c *Connection) handleRequestPacket(payload []byte) error {
 	cmd := payload[0]
 	body := payload[1:]
-	fmt.Printf("cmd: %v body: %v", cmd, body)
-	os.Exit(1)
+	fmt.Printf("cmd: %v \n", cmd)
+	PrintBytes(body)
+	c.writeOK(0, 0, 0)
 
 	switch cmd {
 	case COM_QUIT:

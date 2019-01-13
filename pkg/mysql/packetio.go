@@ -43,6 +43,10 @@ func NewPacketIOByConn(conn net.Conn) *PacketIO {
 	return NewPacketIO(r, w)
 }
 
+func (pio *PacketIO) ResetSequence() {
+	pio.Sequence = 0
+}
+
 func (pio *PacketIO) ReadPacket() ([]byte, error) {
 	// [length: byte[3]][sequence_id: byte[1]][playload: byte[length]]
 	header := []byte{0, 0, 0, 0}
