@@ -253,8 +253,8 @@ func (c *Connection) writeInitialHandshake() error {
 // https://dev.mysql.com/doc/internals/en/connection-phase-packets.html#packet-Protocol::HandshakeResponse
 func (c *Connection) readHandshakeResponse() (*handkshakeResponse, error) {
 	pr, err := c.packetIO.NewPacketReader()
-	if debug {
-		PrintBytes(pr.buf)
+	if err != nil {
+		return nil, err
 	}
 	h := handkshakeResponse{}
 	h.attrs = map[string]string{}
